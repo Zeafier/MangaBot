@@ -13,8 +13,9 @@ const client = new Client ({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent
     ]
-})
-client.login(process.env.TOKEN)
+});
+
+client.login(process.env.TOKEN);
 
 app.listen(PORT, () => {
     console.log(`App is running on ${PORT} port`);
