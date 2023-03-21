@@ -1,28 +1,11 @@
-const { get_manga } = require('../api/mangadex_request');
 const { request, selected } = require('../api/manganato_requests');
 
 // bot commands
-let bot = (client, manganato) => {
-    client.on('ready', () => {
-        console.log(`Logged as ${client.user.tag}`)
-    });
+let bot = (client) => {
 
     // Read messages from discords
     client.on('messageCreate', async message => {
         if (message.author.bot) return false;
-
-        // bot helper commands
-        if (message.content.toLowerCase() === '!help') {
-            message.reply(
-                `Please find below bot commands. Remember, paces matter!:
-                1. !set - set your bot
-                2. !search <manga> - search for manga
-                3. !add <manga> - add manga to your current list
-                4. !remove <manga> - remove manga from your current list
-                5. !list - display your reading list
-                `
-            )
-        }
 
         // bot add command
         if (message.content.toLowerCase().includes('!add')) {

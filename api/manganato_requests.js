@@ -4,18 +4,28 @@ const manganato = new Manganato();
 // request manga
 let request = async (manga) => {
     const mangas = await manganato.search(manga);
-    console.log(mangas)
+
     if(mangas.length > 1) {
-        console.log("Please be more specific");
 
         let text = `List of found mangas: \n`;
         //check for all mangas and add to list
-        for(let i=0; i < mangas.length; i++){
-            let current = i+1;
-            text += `${current}. ${mangas[i].title}; link: <${mangas[i].url}>; \n`
-        }
 
-        let manga_info = [false, text];
+        let manga_info;
+
+        //check how many manga has been returned
+        if (mangas.length <= 5) {
+            for(let i=0; i < mangas.length; i++){
+                let current = i+1;
+                text += `${current}. ${mangas[i].title}; link: <${mangas[i].url}>; \n`
+            }
+
+            manga_info =[false, text];
+        }
+        
+        //if manga info is bigger than 5 records
+        if (mangas.length > 5) {
+            manga_info = [false, mangas];
+        }
 
         return manga_info;
     } else {
