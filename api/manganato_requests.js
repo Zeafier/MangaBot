@@ -5,33 +5,39 @@ const manganato = new Manganato();
 let request = async (manga) => {
     const mangas = await manganato.search(manga);
 
+    //Check if manga exists
+    if(mangas.length < 1) {
+        return ['undefined', 'No manga with this title has been found']
+    }
+
     if(mangas.length > 1) {
 
         let text = `List of found mangas: \n`;
-        //check for all mangas and add to list
-
         let manga_info;
+        //check for all mangas and add to list
 
         //check how many manga has been returned
         if (mangas.length <= 5) {
+
             for(let i=0; i < mangas.length; i++){
                 let current = i+1;
                 text += `${current}. ${mangas[i].title}; link: <${mangas[i].url}>; \n`
             }
 
-            manga_info =[false, text];
+            manga_info = ['few', text];
         }
         
         //if manga info is bigger than 5 records
         if (mangas.length > 5) {
-            manga_info = [false, mangas];
+            manga_info = ['several', mangas];
         }
 
         return manga_info;
     } else {
+
         //return manga
         const meta = await manganato.getMangaMeta(mangas[0].url);
-        let manga_info = [true, meta.chapters[0]];
+        manga_info = ['found', meta.chapters[0]];
         return manga_info;
     }
 }

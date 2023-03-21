@@ -1,5 +1,6 @@
 const { request, selected } = require('../../api/manganato_requests');
-const { ApplicationCommandOptionType } = require('discord.js')
+const { ApplicationCommandOptionType } = require('discord.js');
+const addMangaToDb = require('../../database/callbacks/addNewManga');
 
 module.exports = {
     name: 'add-manga',
@@ -13,7 +14,7 @@ module.exports = {
     ],
 
     callback: async (client, interaction) => {
-        interaction.reply('Waiting...');
+        await interaction.reply('Waiting...');
         let text = interaction.options.get('manga-name').value;;
 
         // Manganato request
@@ -24,14 +25,26 @@ module.exports = {
         //get array value
         let manga_info = response[1];
 
-        if(bool) {
-            interaction.editReply(`The following has been added to your list:
-                Name: ${text}
-                Current Chapter: ${manga_info.name}
-                Link: <${manga_info.url}>
-            `)
+        if(bool === 'found') {
+            let response = await addMangaToDb(text, manga_info);
+
+            if(typeof response !== 'boolean'){
+                await interaction.editReply(response);
+            }else if(response){
+                await interaction.editReply(`The following has been added to your list:
+                    Name: ${text}
+                    Current Chapter: ${manga_info.name}
+                    Link: <${manga_info.url}>
+                `);
+            }else{
+                await interaction.editReply('There was a problem with your request. Please try again or contact admin');
+            }
+            
+        } else if(bool === 'undefined') {
+            await interaction.editReply(manga_info);
         } else {
-            interaction.editReply(manga_info);
+            console.log(manga_info);
+            await interaction.editReply(`There are ${manga_info.length} manga found with "${text}" name. Please try to more specific or use search`);
         }
     }
 }

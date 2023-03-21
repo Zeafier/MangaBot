@@ -21,14 +21,13 @@ module.exports = {
         let response = await request(text);
 
         //check if response is a string
-        if (typeof response[1] === 'string') {
-            await interaction.editReply(response[1]);
-        } else {
+        if(typeof response[1] === 'string') {
+            await interaction.editReply(response[1])
+        } else if(response[1].length > 5) {
             let i = 0;
             let limit = 5;
             let max = response[1].length;
             let text = `There were too many manga on the list (found ${max} records): \n`;
-            
 
             //get list - check if limit is bigger than max
             if (limit > max) {
@@ -44,10 +43,15 @@ module.exports = {
                     text += `${current}. ${mangas[i].title}; link: <${mangas[i].url}>; \n`
                 }
             }
-            
-            console.log(text)
 
             await interaction.editReply(text)
+        } else {
+            await interaction.editReply(`
+                Found manga:
+                Title: ${text}
+                Chapter: ${response[1].name}
+                url: ${response[1].url}
+            `);
         }
     }
 }

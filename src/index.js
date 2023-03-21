@@ -7,6 +7,9 @@ const eventHandler = require('../handlers/eventHandler');
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
+//run db
+require('../database/db');
+
 //enable app to read env files
 require('dotenv').config();
 
