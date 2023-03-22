@@ -48,9 +48,9 @@ module.exports = {
         } else {
             await interaction.editReply(`
                 Found manga:
-                Title: ${text}
-                Chapter: ${response[1].name}
-                url: ${response[1].url}
+                Title: ${response[1].title.main}
+                Chapter: ${response[1].chapters[0].name}
+                url: ${response[1].chapters[0].url}
             `);
         }
     }

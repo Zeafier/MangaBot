@@ -37,7 +37,7 @@ let request = async (manga) => {
 
         //return manga
         const meta = await manganato.getMangaMeta(mangas[0].url);
-        manga_info = ['found', meta.chapters[0]];
+        manga_info = ['found', meta];
         return manga_info;
     }
 }

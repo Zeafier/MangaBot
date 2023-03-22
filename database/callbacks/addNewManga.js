@@ -1,8 +1,10 @@
 const Manga = require('../model/add-manga');
 const checker = require('./checkIfExists');
 
-module.exports = async (title, manga_info) => {
-    const {name, url} = manga_info;
+module.exports = async (manga_info) => {
+    const title = manga_info.title.main;
+    const chapter = manga_info.chapters[0].name;
+    const url = manga_info.chapters[0].url;
 
     try {
         let exists = await checker(title);
@@ -13,7 +15,7 @@ module.exports = async (title, manga_info) => {
 
         const new_manga = new Manga({
             title: title,
-            chapter: name,
+            chapter: chapter,
             url: url
         });
 

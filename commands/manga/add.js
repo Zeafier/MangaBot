@@ -1,6 +1,7 @@
 const { request, selected } = require('../../api/manganato_requests');
 const { ApplicationCommandOptionType } = require('discord.js');
 const addMangaToDb = require('../../database/callbacks/addNewManga');
+//interaction.server.id //if slash commands - get server id
 
 module.exports = {
     name: 'add-manga',
@@ -15,7 +16,7 @@ module.exports = {
 
     callback: async (client, interaction) => {
         await interaction.reply('Waiting...');
-        let text = interaction.options.get('manga-name').value;;
+        let text = interaction.options.get('manga-name').value;
 
         // Manganato request
         let response = await request(text);
@@ -26,15 +27,15 @@ module.exports = {
         let manga_info = response[1];
 
         if(bool === 'found') {
-            let response = await addMangaToDb(text, manga_info);
+            let response = await addMangaToDb(manga_info);
 
             if(typeof response !== 'boolean'){
                 await interaction.editReply(response);
             }else if(response){
                 await interaction.editReply(`The following has been added to your list:
-                    Name: ${text}
-                    Current Chapter: ${manga_info.name}
-                    Link: <${manga_info.url}>
+                    Name: ${manga_info.title}
+                    Current Chapter: ${manga_info.chapters[0].name}
+                    Link: <${manga_info.chapters[0].url}>
                 `);
             }else{
                 await interaction.editReply('There was a problem with your request. Please try again or contact admin');
