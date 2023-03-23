@@ -13,9 +13,6 @@ require('../database/db');
 //enable app to read env files
 require('dotenv').config();
 
-//run db
-// require('./config/db');
-
 //discord bot setup
 const client = new Client ({
     intents: [

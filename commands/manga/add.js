@@ -1,8 +1,9 @@
 const { request, selected } = require('../../api/manganato_requests');
-const { ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { ApplicationCommandOptionType, ComponentType } = require('discord.js');
 const addMangaToDb = require('../../database/callbacks/addNewManga');
 const getMangaList = require('../../utils/getMangaList');
 const isNumber = require('../../utils/isNumber');
+const previewBtn = require('../../buttons/preview.Btn');
 //interaction.server.id //if slash commands - get server id
 
 module.exports = {
@@ -19,26 +20,6 @@ module.exports = {
     callback: async (client, interaction) => {
         await interaction.reply('Waiting...');
         let text = interaction.options.get('manga-name').value;
-
-        //buttons
-        const row = new ActionRowBuilder()
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId('prev')
-                    .setLabel('<')
-                    .setStyle(ButtonStyle.Primary),
-            )
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId('next')
-                    .setLabel('>')
-                    .setStyle(ButtonStyle.Primary))
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId('cancel')
-                    .setLabel('cancel')
-                    .setStyle(ButtonStyle.Danger));
-
 
         // Manganato request
         let response = await request(text);
@@ -74,23 +55,28 @@ module.exports = {
             let replyMessage = `Found ${manga_info.length} records. Please type number which manga you want to choose \n \n type: <number> / type: next / prev \n \n`
 
             await interaction.editReply({
+                ephemeral: true,
                 content: replyMessage + await getMangaList(current_number, manga_info),
-                components: [row]
+                components: [previewBtn()]
             });
 
+            //get user response
             let filter = msg => msg.author.id === interaction.user.id;
             let collector = interaction.channel.createMessageCollector({
                 filter,
                 time: 60000
             });
 
+            //check all of the messages in collector
             for await (const msg of collector) {
+                // console.log(msg);
                 let reply = msg[0].content.toLowerCase();
 
                 // check if user want's next list
                 if (msg[0].customId === 'next' && current_number + 5 < manga_info.length) {
                     current_number += 5;
-                    interaction.followUp({
+                    interaction.editReply({
+                        ephemeral: true,
                         content: replyMessage + await getMangaList(current_number, manga_info),
                         components: [row]
                     });
@@ -98,7 +84,8 @@ module.exports = {
                 // previous list
                 else if (msg[0].customId === 'prev' && current_number - 5 >= 0) {
                     current_number -= 5;
-                    interaction.followUp({
+                    interaction.editReply({
+                        ephemeral: true,
                         content: replyMessage + await getMangaList(current_number, manga_info),
                         components: [row]
                     });
@@ -114,7 +101,7 @@ module.exports = {
                         console.log(manga_info[selected])
                         collector.stop();
                     } else {
-                        interaction.followUp('Selected number is not on the list')
+                        collector.stop();
                     }
                     
                 }
@@ -123,16 +110,17 @@ module.exports = {
                     collector.stop();
                 }
                 else {
-                    interaction.edit({ content: "No reply", components: [] })
-                    interaction.followUp('Incorrect input. Please type one of the following:\nnumber\nnext\nprev\ncancel')
+                    collector.stop();
+                    interaction.editReply({ ephemeral: true, content: 'Incorrect input. Please type number from the list', components: [] })
                 }
             }
 
             //check if got response
             if (gotResponse) {
-                interaction.followUp('You done it!')
+                interaction.followUp({ephemeral: true, content: 'You done it!'})
             } else {
-                interaction.followUp('Request has been cancelled 🙂')
+                interaction.deleteReply();
+                interaction.followUp({ephemeral: true, content: 'Request has been cancelled 🙂'})
             }
             
         }
