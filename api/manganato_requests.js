@@ -11,30 +11,11 @@ let request = async (manga) => {
     }
 
     if(mangas.length > 1) {
-
-        let text = `List of found mangas: \n`;
-        let manga_info;
-        //check for all mangas and add to list
-
-        //check how many manga has been returned
-        if (mangas.length <= 5) {
-
-            for(let i=0; i < mangas.length; i++){
-                let current = i+1;
-                text += `${current}. ${mangas[i].title}; link: <${mangas[i].url}>; \n`
-            }
-
-            manga_info = ['few', text];
-        }
-        
-        //if manga info is bigger than 5 records
-        if (mangas.length > 5) {
-            manga_info = ['several', mangas];
-        }
-
+        let manga_info = ['several', mangas];
         return manga_info;
-    } else {
 
+    } else {
+        //TO be improvced
         //return manga
         const meta = await manganato.getMangaMeta(mangas[0].url);
         manga_info = ['found', meta];
