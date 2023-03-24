@@ -1,6 +1,5 @@
 const express = require('express');
 const app = express();
-const bot = require('../bot/bot_commands');
 const { Client, IntentsBitField } = require('discord.js');
 const eventHandler = require('../handlers/eventHandler');
 

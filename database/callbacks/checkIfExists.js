@@ -2,7 +2,7 @@ const Manga = require('../model/add-manga');
 
 module.exports = async (title) => {
     try {
-        let exists = await Manga.findOne({title: title.toLowerCase()});
+        let exists = await Manga.findOne({title: title});
 
         if(exists) return true
 

@@ -1,5 +1,5 @@
 const { request, selected } = require('../../api/manganato_requests');
-const { ApplicationCommandOptionType, ComponentType } = require('discord.js');
+const { ApplicationCommandOptionType, ComponentType, PermissionFlagsBits } = require('discord.js');
 const addMangaToDb = require('../../database/callbacks/addNewManga');
 const getMangaList = require('../../utils/getMangaList');
 const isNumber = require('../../utils/isNumber');
@@ -9,6 +9,7 @@ const previewBtn = require('../../buttons/preview.Btn');
 module.exports = {
     name: 'add-manga',
     description: 'Add which manga you want to get posts on',
+    permissions: PermissionFlagsBits.ManageGuild,
     options: [
         {
             name: 'manga-name',
@@ -24,6 +25,8 @@ module.exports = {
 
         // Manganato request
         let response = await request(text);
+        let manga_chapters;
+        let current_server = interaction.guild.id
 
         //get boolean value
         let bool = response[0];
@@ -31,15 +34,19 @@ module.exports = {
         let manga_info = response[1];
 
         if (bool === 'found') {
-            let response = await addMangaToDb(manga_info);
+            manga_chapters = await selected(manga_info.url);
 
-            if (typeof response !== 'boolean') {
+            let db_response = await addMangaToDb(manga_chapters.title.main, manga_info.url, manga_chapters, current_server);
+
+            //check if response was a boolean
+            if (typeof db_response !== 'boolean') {
                 await interaction.editReply(response)
-            } else if (response) {
+                //Check if reponse has been found
+            } else if (db_response) {
                 await interaction.editReply({ content: `The following has been added to your list:
-                Name: ${manga_info.title.main}
-                Current Chapter: ${manga_info.chapters[0].name}
-                Link: <${manga_info.chapters[0].url}>`, ephemeral: true, components: []});
+                Name: ${manga_chapters.title.main}
+                Current Chapter: ${manga_chapters.chapters[0].name}
+                Link: <${manga_info.url}>`, components: []});
             } else {
                 await interaction.editReply({ content: 'There was a problem with your request. Please try again or contact admin', ephemeral: true });
             }
@@ -49,7 +56,7 @@ module.exports = {
         } else {
             // number of manga in list to be displayed
             let current_number = 0;
-            let selected;
+            let selected_num;
             let gotResponse = false;
 
             let replyMessage = `Found ${manga_info.length} records. Please type number which manga you want to choose \n \n`
@@ -70,6 +77,7 @@ module.exports = {
             });
             let button_collector = interaction.channel.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 70000 });
 
+            //Get collector for the buttons
             button_collector.on('collect', async i => {
                 // check if user want's next list
                 if (i.customId === 'next' && current_number + 5 < manga_info.length) {
@@ -112,16 +120,17 @@ module.exports = {
                 // check if reply is a number
                 if (!isNaN(reply) && isNumber(reply)) {
                     //set selected number
-                    selected = parseInt(reply) - 1;
+                    selected_num = parseInt(reply) - 1;
 
                     //check if selected number is in array
-                    if (selected >= 0 && selected < manga_info.length) {
+                    if (selected_num >= 0 && selected_num < manga_info.length) {
+                        manga_chapters = await selected(manga_info[selected_num].url);
 
-                        let response = await addMangaToDb(manga_info[selected]);
+                        let db_response = await addMangaToDb(manga_chapters.title.main, manga_info[selected_num].url, manga_chapters, current_server);
 
-                        if (typeof response !== 'boolean') {
+                        if (typeof db_response !== 'boolean') {
                             collector.stop();
-                        } else if (response) {
+                        } else if (db_response) {
                             gotResponse = true;
                             collector.stop();
                         } else {
@@ -140,9 +149,9 @@ module.exports = {
             if (gotResponse) {
                 await interaction.deleteReply();
                 await interaction.followUp({ content: `The following has been added to your list:
-                            Name: ${manga_info[selected].title.main}
-                            Current Chapter: ${manga_info[selected].chapters[0].name}
-                            Link: <${manga_info[selected].chapters[0].url}>`, ephemeral: true, components: []});
+                            Name: ${manga_chapters.title.main}
+                            Current Chapter: ${manga_chapters.chapters[0].name}
+                            Link: <${manga_info[selected_num].url}>`, components: []});
             } else {
                 button_collector.stop();
                 await interaction.deleteReply();

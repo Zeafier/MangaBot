@@ -15,18 +15,16 @@ let request = async (manga) => {
         return manga_info;
 
     } else {
-        //TO be improvced
-        //return manga
-        const meta = await manganato.getMangaMeta(mangas[0].url);
-        manga_info = ['found', meta];
+        manga_info = ['found', mangas[0]];
         return manga_info;
     }
 }
 
+// get manga information about selected
 let selected = async (link) => {
     const meta = await manganato.getMangaMeta(link);
-    let manga_info = meta.chapters[0];
-    return manga_info;
+
+    return meta;
 }
 
 module.exports = {

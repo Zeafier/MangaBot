@@ -1,4 +1,4 @@
-const { testServer } = require('../../config.json');
+const { guildId } = require('../../config.json');
 const areCommandsDifferent = require('../../utils/areCommandsDifferent');
 const getApplicationCommands = require('../../utils/getApplicationCommmads');
 const getLocalCommands = require('../../utils/getLocalCommands')
@@ -8,7 +8,7 @@ module.exports = async (client) => {
     const localCommands = getLocalCommands();
     const applicationCommands = await getApplicationCommands(
       client,
-      testServer
+      guildId
     );
 
     for (const localCommand of localCommands) {
@@ -51,6 +51,6 @@ module.exports = async (client) => {
       }
     }
   } catch (error) {
-    console.log(`TThere was an error: ${error}`);
+    console.log(`There was an error: ${error}`);
   }
 };

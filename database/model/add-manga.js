@@ -19,6 +19,10 @@ let manga = new Schema({
     url: {
         type: String,
         required: true
+    },
+    server: {
+        type: String,
+        required: true
     }
 });
 
