@@ -1,5 +1,7 @@
-const { request, selected } = require('../../api/manganato_requests');
-const { ApplicationCommandOptionType } = require('discord.js')
+const { request } = require('../../api/manganato_requests');
+const { ApplicationCommandOptionType, ComponentType } = require('discord.js');
+const previewBtn = require('../../buttons/preview.Btn');
+const getMangaList = require('../../utils/getMangaList');
 
 module.exports = {
     name: 'search-manga',
@@ -13,45 +15,86 @@ module.exports = {
     ],
 
     callback: async (client, interaction) => {
-        await interaction.deferReply();
-
-        let text = await interaction.options.get('manga-name').value;;
+        await interaction.reply('Please wait...')
+        let text = await interaction.options.get('manga-name').value;
 
         // Manganato request
-        let response = await request(text);
+        let res = await request(text);
+        let type = res[0], manga_list = res[1];
 
-        //check if response is a string
-        if(typeof response[1] === 'string') {
-            await interaction.editReply(response[1])
-        } else if(response[1].length > 5) {
-            let i = 0;
-            let limit = 5;
-            let max = response[1].length;
-            let text = `There were too many manga on the list (found ${max} records): \n`;
+        //Check if there are results
+        if (type === "undefined") {
+            await interaction.editReply({ content: manga_list, components: [] });
+        } else if (type === 'found') {
+            await interaction.editReply({ content: `One record has been found:
+                Name: ${manga_list.title}
+                Link: <${manga_list.url}>`, components: []});
+        } else {
+            let current_number = 0;
+            let max;
 
-            //get list - check if limit is bigger than max
-            if (limit > max) {
-                for (i; i < max; i++){
-                    let current = i + 1;
-                    let mangas = response[1]
-                    text += `${current}. ${mangas[i].title}; link: <${mangas[i].url}>; \n`
-                }
+            // set max number
+            if (current_number + 5 > res.length) {
+                max = res.length;
             } else {
-                for (i; i < limit; i++){
-                    let current = i + 1;
-                    let mangas = response[1]
-                    text += `${current}. ${mangas[i].title}; link: <${mangas[i].url}>; \n`
-                }
+                max = current_number + 5;
             }
 
-            await interaction.editReply(text)
-        } else {
-            await interaction.editReply(`
-                Found manga:
-                Title: ${response[1].title.main}
-                Chapter: ${response[1].chapters[0].name}
-                url: ${response[1].chapters[0].url}
-            `);
+            let replyMessage = `Found ${res.length} manga with this title. Page ${current_number + 1} - ${max} \n\n`
+
+            //await response
+            await interaction.editReply({
+                ephemeral: true,
+                content: replyMessage + await getMangaList(current_number, manga_list),
+                components: [previewBtn()]
+            });
+
+            let button_filet = msg => msg.user.id === interaction.user.id;
+            let button_collector = interaction.channel.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 60000 });
+
+            //Get collector for the buttons
+            button_collector.on('collect', async i => {
+                // check if user want's next list
+                if (i.customId === 'next' && current_number + 5 < manga_list.length) {
+                    current_number += 5;
+
+                    i.deferUpdate();
+
+                    interaction.editReply({
+                        content: replyMessage + await getMangaList(current_number, manga_list),
+                        components: [previewBtn()]
+                    });
+                }
+                // previous list
+                else if (i.customId === 'prev' && current_number - 5 >= 0) {
+                    current_number -= 5;
+
+                    i.deferUpdate();
+
+                    interaction.editReply({
+                        content: replyMessage + await getMangaList(current_number, manga_list),
+                        components: [previewBtn()]
+                    });
+                }
+                //Check if cancelled
+                else if (i.customId === 'cancel') {
+                    button_collector.stop();
+                }
+                //ignore other request
+                else {
+                    i.deferUpdate();
+                }
+            });
+
+            //stop collector
+            button_collector.on('end', async () => {
+                await interaction.editReply({
+                    content: replyMessage + await getMangaList(current_number, manga_list),
+                    components: []
+                });
+
+                await interaction.followUp('Request has been cancelled 🙂');
+            })
         }
     }
 }

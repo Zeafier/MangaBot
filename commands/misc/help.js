@@ -3,12 +3,11 @@ module.exports = {
     description: 'Show all of the bots commands',
 
     callback: (client, interaction) => {
-        interaction.reply(`Please find below bot commands. Remember, spaces matter!:
-                1. !set - set your bot
-                2. !search <manga> - search for manga
-                3. !add <manga> - add manga to your current list
-                4. !remove <manga> - remove manga from your current list
-                5. !list - display your reading list
-                `)
+        interaction.reply(`Please find below valid bot commands. Please note that there is timer of 60s for each of them:
+        1. /add-manga <manga name> - add manga to your reading list (permission required)
+        2. /search-manga <manga name> - search for manga
+        3. /list-manga - get server's current reading list
+        4. /remove-manga <manga name> - remove manga from server's reading list (permissions required)
+        5. /channel <select> - select where bot should post chapters (permissions required)`)
     }
 }

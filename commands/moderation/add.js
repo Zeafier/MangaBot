@@ -41,7 +41,7 @@ module.exports = {
             //check if response was a boolean
             if (typeof db_response !== 'boolean') {
                 await interaction.editReply(response)
-                //Check if reponse has been found
+                //Check if response has been found
             } else if (db_response) {
                 await interaction.editReply({ content: `The following has been added to your list:
                 Name: ${manga_chapters.title.main}

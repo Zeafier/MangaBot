@@ -37,7 +37,7 @@ module.exports = {
         let button_collector = interaction.channel.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 60000 });
 
         if (res === 'NaN') {
-            await interaction.editReply('There is no manga on your reading list');
+            await interaction.editReply({ content: 'There is no manga on your reading list', components: [] });
         } else {
             //Get collector for the buttons
             button_collector.on('collect', async i => {
