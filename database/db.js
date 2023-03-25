@@ -5,8 +5,11 @@ const url = process.env.TestingDB;
 
 
 const connectDB = async () => {
+    if(!url) return;
+
     try {
         await mongoose.connect(url, {
+            keepAlive: true,
             useNewURLParser: true,
             useUnifiedTopology: true
         });

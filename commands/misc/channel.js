@@ -1,4 +1,5 @@
-const { PermissionFlagsBits } = require('discord.js');
+const { PermissionFlagsBits, ApplicationCommandOptionType } = require('discord.js');
+const dbServerSettings = require('../../database/server/serverPostingSettings');
 
 module.exports = {
     name: 'channel',
@@ -6,16 +7,29 @@ module.exports = {
     permissions: PermissionFlagsBits.ManageGuild,
     // devOnly: true,
     // testOnly: true,
-    // options: Object[]
+    options: [
+        {
+            name: 'channel-name',
+            description: 'Select channel',
+            required: true,
+            type: ApplicationCommandOptionType.Channel
+        }
+    ],
     // deleted: Boolean
 
     callback: async (client, interaction) => {
         const channel = interaction.options.get('channel-name').value;
-        // client.channels.set(channel);
-        client.channels.cache.get(channel).send('This channel will be used for posting manga updates');
+        const current_server = interaction.guild.id;
         
-        //set in mongodb to set main channel
+        const response = await dbServerSettings(current_server, channel);
 
-        await interaction.reply('Set');
+        if (response) {
+            client.channels.cache.get(channel).send('This channel will be used for posting manga updates');
+            //set in mongodb to set main channel
+
+            await interaction.reply('Selected channel has been set as main posting channel');
+        }else{
+            await interaction.reply('Something went wrong');
+        }
     }
 }

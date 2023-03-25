@@ -26,7 +26,7 @@ module.exports = {
         // Manganato request
         let response = await request(text);
         let manga_chapters;
-        let current_server = interaction.guild.id
+        let current_server = interaction.guild.id;
 
         //get boolean value
         let bool = response[0];
