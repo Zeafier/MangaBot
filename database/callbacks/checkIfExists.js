@@ -1,8 +1,8 @@
 const Manga = require('../model/add-manga');
 
-module.exports = async (title) => {
+module.exports = async (title, server_id) => {
     try {
-        let exists = await Manga.findOne({title: title});
+        let exists = await Manga.findOne({title: title, server: server_id});
 
         if(exists) return true
 

@@ -3,7 +3,6 @@ const settings = require('../model/server_settings');
 module.exports = async (server_id, channel_id) => {
     //check if settings already exists
     let res = await settings.findById(server_id);
-    console.log(channel_id);
 
     if(res) {
         //update settings

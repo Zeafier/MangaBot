@@ -1,5 +1,5 @@
 const getAllFiles = require("../utils/getAllFiles");
-const path = require('path')
+const path = require('path');
 
 //export event handler
 module.exports = (client) => {

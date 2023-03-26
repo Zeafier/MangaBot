@@ -10,12 +10,8 @@ let server_setting = new Schema({
     channelID: {
         type: String,
         required: true
-    },
-    timestamp: {
-        type: Date,
-        default: new Date()
-    } 
-});
+    }
+}, {timestamps: true});
 
 const model = mongoose.model('server_setting', server_setting);
 

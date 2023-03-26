@@ -5,7 +5,7 @@ module.exports = async(title, link, manga_info, server) => {
     const chapter = manga_info.chapters[0].name;
 
     try {
-        let exists = await checker(title);
+        let exists = await checker(title, server);
 
         //return false if manga already exists
         if(typeof exists !== 'boolean') return exists;

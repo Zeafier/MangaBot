@@ -1,6 +1,6 @@
 module.exports = {
     name: 'help',
-    description: 'Show all of the bots commands',
+    description: 'Display all of the bots commands',
 
     callback: (client, interaction) => {
         interaction.reply(`Please find below valid bot commands. Please note that there is timer of 60s for each of them:
