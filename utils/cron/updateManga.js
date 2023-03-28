@@ -1,4 +1,4 @@
-let Manga = require('../database/model/add-manga');
+let Manga = require('../../database/model/add-manga');
 
 module.exports = async (currentChapter, serverChapter, serverChapterId) => {
     try {

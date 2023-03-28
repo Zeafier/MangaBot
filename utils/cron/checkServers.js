@@ -1,6 +1,6 @@
 let checkServerIfCanPost = require('./checkServerIfCanPost');
-let getAllServers= require('../database/server/getAllServers');
-let removeInactiveServer = require('../database/server/removeInactiveServer');
+let getAllServers= require('../../database/server/getAllServers');
+let removeInactiveServer = require('../../database/server/removeInactiveServer');
 
 module.exports = async (client) => {
     try {

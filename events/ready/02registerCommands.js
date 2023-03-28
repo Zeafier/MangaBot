@@ -1,7 +1,7 @@
 const areCommandsDifferent = require('../../utils/areCommandsDifferent');
 const getApplicationCommands = require('../../utils/getApplicationCommmads');
 const getLocalCommands = require('../../utils/getLocalCommands');
-const checkIfCanPost = require('../../cron/checkServerIfCanPost');
+const checkIfCanPost = require('../../utils/cron/checkServerIfCanPost');
 const getServerSettings = require('../../database/server/getAllServers');
 
 const createCommands = async (client, guildId) => {

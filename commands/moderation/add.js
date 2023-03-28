@@ -58,6 +58,7 @@ module.exports = {
             let current_number = 0;
             let selected_num;
             let gotResponse = false;
+            let db_reply = '';
 
             let replyMessage = `Found ${manga_info.length} records. Please type number which manga you want to choose \n \n`
 
@@ -129,6 +130,7 @@ module.exports = {
                         let db_response = await addMangaToDb(manga_chapters.title.main, manga_info[selected_num].url, manga_chapters, current_server);
 
                         if (typeof db_response !== 'boolean') {
+                            db_reply = db_response;
                             collector.stop();
                         } else if (db_response) {
                             gotResponse = true;
@@ -155,7 +157,13 @@ module.exports = {
             } else {
                 button_collector.stop();
                 await interaction.deleteReply();
-                await interaction.followUp({ephemeral: true, content: 'Request has been cancelled 🙂'})
+
+                //check if there was db reply
+                if (db_reply === '') {
+                    await interaction.followUp({ephemeral: true, content: 'Request has been cancelled 🙂'})
+                } else {
+                    await interaction.followUp({ ephemeral: true, content: db_reply });
+                }
             }
             
         }
