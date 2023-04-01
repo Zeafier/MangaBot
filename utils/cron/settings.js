@@ -34,7 +34,9 @@ let poster = async (servers, client) => {
             continue
         } else {
             //if item not in array, add new record
-            if (!(chapter_info.includes(server_list.url))) {
+            const current = chapter_info.find(e => e.key === server_list.url);
+
+            if (typeof current === 'undefined') {
                 let manga_info = await selected(server_list.url);
                 let chapter = manga_info.chapters[0];
 
@@ -45,6 +47,7 @@ let poster = async (servers, client) => {
                     cover: manga_info.coverImage
                 });
 
+                //skip if chapter is the same
                 if (chapter.name === server_list.chapter) {
                     continue;
                 }
@@ -54,9 +57,13 @@ let poster = async (servers, client) => {
             }
 
             //compare existing
-            const current = chapter_info.find(e => e.key === server_list.url);
             const chapter = current.chapter;
             const cover = current.cover;
+
+            //skip if chapter is the same
+            if (chapter.name === server_list.chapter) {
+                continue;
+            }
 
             await process_update(client, servers, chapter, server_list, cover);
         }

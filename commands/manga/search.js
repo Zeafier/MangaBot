@@ -4,7 +4,7 @@ const previewBtn = require('../../buttons/preview.Btn');
 const getMangaList = require('../../utils/getMangaList');
 
 module.exports = {
-    name: 'search-manga',
+    name: 'searchmanga',
     description: 'Search for manga to be added',
     options: [
         {

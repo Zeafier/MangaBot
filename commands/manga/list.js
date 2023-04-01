@@ -6,7 +6,7 @@ const previewBtn = require('../../buttons/preview.Btn');
 
 //will be used for reading list
 module.exports = {
-    name: 'list-manga',
+    name: 'showmangalist',
     description: 'Display your current manga reading list',
 
     callback: async (client, interaction) => {

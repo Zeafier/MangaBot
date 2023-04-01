@@ -6,7 +6,7 @@ const { ApplicationCommandOptionType, ComponentType, PermissionFlagsBits } = req
 const getMangaList = require('../../utils/getMangaList');
 
 module.exports = {
-    name: 'remove-manga',
+    name: 'removemanga',
     description: 'Remove manga from your reading list',
     permissions: PermissionFlagsBits.ManageGuild,
     options: [

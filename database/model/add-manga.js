@@ -25,6 +25,11 @@ let manga = new Schema({
         type: String,
         required: true
     },
+    source: {
+        type: String,
+        required: true,
+        default: 'manganato'
+    },
     expiresAt: {
         type: Date,
         expires: year,

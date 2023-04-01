@@ -7,7 +7,7 @@ const previewBtn = require('../../buttons/preview.Btn');
 //interaction.server.id //if slash commands - get server id
 
 module.exports = {
-    name: 'add-manga',
+    name: 'addmanga',
     description: 'Add which manga you want to get posts on',
     permissions: PermissionFlagsBits.ManageGuild,
     options: [
