@@ -1,43 +1,42 @@
+const checkServer = require('./checkServers');
+const process_update = require ('./processUpdate');
 let { selected } = require('../../api/manganato_requests');
 let Manga = require('../../database/model/add-manga');
-const postChapter = require('./postChapter');
-const checkServer = require('./checkServers');
-const updateManga = require('./updateManga');
+const year_to_mill = 1000*60*60*24*365;
 
-let poster = async (servers, client) => {
-    let server_lists = await Manga.find();
-    let chapter_info = [];
+module.exports = async (client) => {
 
-    //get posts for each manga
-    for (let i = 0; i < server_lists.length; i++) {
+    try {
+        // get server list
+        let servers = await checkServer(client);
+        const today = new Date();
+        const today_to_mill = today.getTime();
 
-        let server_list = server_lists[i];
+        let server_lists = await Manga.find();
+        let chapter_info = [];
 
-        if(chapter_info.length <= 0){
-            let manga_info = await selected(server_list.url);
-            //fix that part
-            let chapter = manga_info.chapters[0];
+        //get posts for each manga
+        for (let i = 0; i < server_lists.length; i++) {
+            //assign server list to variable
+            let server_list = server_lists[i];
+            const last_updated_to_mill = server_list.updatedAt.getTime();
 
-            //Push chapter to the list if there are no lists available
-            chapter_info.push({
-                key: server_list.url,
-                chapter: chapter,
-                cover: manga_info.coverImage
-            });
-
-            //check if new chapter is the same as server one
-            if (chapter.name === server_list.chapter) {
+            //remove record if it was updated last year
+            if((today_to_mill - last_updated_to_mill) > year_to_mill) {
+                await Manga.findByIdAndRemove(server_list._id);
                 continue;
             }
 
-            await process_update(client, servers, chapter, server_list, manga_info.coverImage);
-            continue
-        } else {
-            //if item not in array, add new record
-            const current = chapter_info.find(e => e.key === server_list.url);
+            //check if server's reading id is in servers array - if not remove
+            let onList = servers.find(e => e._id === server_list.server);
+            if(typeof onList === "undefined") {
+                await Manga.findByIdAndRemove(server_list._id);
+                continue;
+            }
 
-            if (typeof current === 'undefined') {
+            if(chapter_info.length <= 0){
                 let manga_info = await selected(server_list.url);
+                //fix that part
                 let chapter = manga_info.chapters[0];
 
                 //Push chapter to the list if there are no lists available
@@ -47,50 +46,49 @@ let poster = async (servers, client) => {
                     cover: manga_info.coverImage
                 });
 
-                //skip if chapter is the same
+                //check if new chapter is the same as server one
                 if (chapter.name === server_list.chapter) {
                     continue;
                 }
 
                 await process_update(client, servers, chapter, server_list, manga_info.coverImage);
                 continue
+            } else {
+                //if item not in array, add new record
+                const current = chapter_info.find(e => e.key === server_list.url);
+
+                if (typeof current === 'undefined') {
+                    let manga_info = await selected(server_list.url);
+                    let chapter = manga_info.chapters[0];
+
+                    //Push chapter to the list if there are no lists available
+                    chapter_info.push({
+                        key: server_list.url,
+                        chapter: chapter,
+                        cover: manga_info.coverImage
+                    });
+
+                    //skip if chapter is the same
+                    if (chapter.name === server_list.chapter) {
+                        continue;
+                    }
+
+                    await process_update(client, servers, chapter, server_list, manga_info.coverImage);
+                    continue
+                }
+
+                //compare existing
+                const chapter = current.chapter;
+                const cover = current.cover;
+
+                //skip if chapter is the same
+                if (chapter.name === server_list.chapter) {
+                    continue;
+                }
+
+                await process_update(client, servers, chapter, server_list, cover);
             }
-
-            //compare existing
-            const chapter = current.chapter;
-            const cover = current.cover;
-
-            //skip if chapter is the same
-            if (chapter.name === server_list.chapter) {
-                continue;
-            }
-
-            await process_update(client, servers, chapter, server_list, cover);
         }
-    }
-}
-
-//process to update manga
-let process_update = async (client, servers, chapter, server_list, cover) => {
-    //update if it is different
-    let server = servers.find(e => e._id === server_list.server);
-    //update in database
-    await updateManga(chapter.name, server_list.chapter, server_list._id);
-    //post info on server
-    await postChapter(client, server_list.title, chapter.name, chapter.url, server._id, server.channelID, cover);
-}
-
-module.exports = async (client) => {
-    // check if bot still has access to server
-    let servers = await checkServer(client);
-
-    //Finish cronjob if there are no servers
-    if(servers.length <= 0){
-        return console.log('No servers found');
-    }
-
-    try {
-        await poster(servers, client);
     } catch (error) {
         console.log(error);
     }   

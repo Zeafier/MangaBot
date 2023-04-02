@@ -16,7 +16,7 @@ module.exports = {
     //         type: ApplicationCommandOptionType.String
     //     }
     // ],
-    deleted: false,
+    deleted: true,
 
     callback: async (client, interaction) => {
         // const serv = interaction.options.get('server-id').value;

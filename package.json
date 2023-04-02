@@ -1,7 +1,7 @@
 {
   "name": "mangabot",
   "version": "1.0.0",
-  "description": "",
+  "description": "Manga update bot is allowing any user to add/remove or view any manga from website",
   "main": "src/index.js",
   "scripts": {
     "application": "node src/index.js",
@@ -11,8 +11,8 @@
     "type": "git",
     "url": "git+https://github.com/Zeafier/MangaBot.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["nodejs", "cron", "discordjs", "mongoose"],
+  "author": "Krystian Malkowski",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Zeafier/MangaBot/issues"
@@ -24,7 +24,9 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "mongoose": "^7.0.2",
-    "node-cron": "^3.0.2",
+    "node-cron": "^3.0.2"
+  },
+  "devDependencies": {
     "nodemon": "^2.0.21"
   }
 }
