@@ -24,7 +24,7 @@ module.exports = {
         const response = await dbServerSettings(current_server, channel);
 
         if (response) {
-            client.channels.cache.get(channel).send('This channel will be used for posting manga updates');
+            await client.channels.cache.get(channel).send('This channel will be used for posting manga updates');
             //set in mongodb to set main channel
 
             await interaction.reply('Selected channel has been set as main posting channel');

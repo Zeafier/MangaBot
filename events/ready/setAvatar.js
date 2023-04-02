@@ -1,3 +1,3 @@
 module.exports = (client) => {
-    client.user.setAvatar('./img/avatar.jpg');
+    // client.user.setAvatar('./img/avatar.jpg');
 }

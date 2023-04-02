@@ -1,6 +1,6 @@
 {
   "name": "mangabot",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Manga update bot is allowing any user to add/remove or view any manga from website",
   "main": "src/index.js",
   "scripts": {
@@ -20,7 +20,7 @@
   "homepage": "https://github.com/Zeafier/MangaBot#readme",
   "dependencies": {
     "@specify_/mangascraper": "^3.6.0",
-    "discord.js": "^14.8.0",
+    "discord.js": "^14.9.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "mongoose": "^7.0.2",

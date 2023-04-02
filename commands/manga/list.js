@@ -14,7 +14,7 @@ module.exports = {
 
         let current_number = 0;
         let max;
-        let server_id = interaction.guild.id;
+        let server_id = await interaction.guild.id;
 
         // Manganato request
         let res = await getReadingList(server_id);
@@ -34,7 +34,7 @@ module.exports = {
         });
 
         let button_filet = msg => msg.user.id === interaction.user.id;
-        let button_collector = interaction.channel.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 60000 });
+        let button_collector = await interaction.channel.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 60000 });
 
         if (res === 'NaN') {
             await interaction.editReply({ content: 'There is no manga on your reading list', components: [] });
@@ -47,7 +47,7 @@ module.exports = {
 
                     i.deferUpdate();
 
-                    interaction.editReply({
+                    await interaction.editReply({
                         content: replyMessage + await getMangaList(current_number, res),
                         components: [previewBtn()]
                     });
@@ -58,7 +58,7 @@ module.exports = {
 
                     i.deferUpdate();
 
-                    interaction.editReply({
+                    await interaction.editReply({
                         content: replyMessage + await getMangaList(current_number, res),
                         components: [previewBtn()]
                     });
@@ -75,6 +75,9 @@ module.exports = {
 
             //stop collector
             button_collector.on('end', async () => {
+                
+                button_collector.stop();
+
                 await interaction.editReply({
                     content: replyMessage + await getMangaList(current_number, res),
                     components: []

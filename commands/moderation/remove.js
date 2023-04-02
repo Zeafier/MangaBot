@@ -2,7 +2,7 @@ const removeManga = require('../../database/callbacks/removeMangaFromList');
 const isNumber = require('../../utils/isNumber');
 const previewBtn = require('../../buttons/preview.Btn');
 const getReadingLit = require('../../database/callbacks/getReadinList');
-const { ApplicationCommandOptionType, ComponentType, PermissionFlagsBits } = require('discord.js');
+const { ApplicationCommandOptionType, ComponentType, PermissionFlagsBits, ButtonStyle } = require('discord.js');
 const getMangaList = require('../../utils/getMangaList');
 
 module.exports = {
@@ -21,7 +21,7 @@ module.exports = {
     callback: async (client, interaction) => {
         await interaction.reply({ content: `Searching...`, ephemeral: true });
 
-        let text = interaction.options.get('manga-name').value;
+        let text = await interaction.options.get('manga-name').value;
         let current_server = interaction.guild.id;
 
         //request manga list from server
@@ -53,11 +53,11 @@ module.exports = {
             let filter = msg => msg.author.id === interaction.user.id;
             let button_filet = msg => msg.user.id === interaction.user.id;
 
-            let collector = interaction.channel.createMessageCollector({
+            let collector = await interaction.channel.createMessageCollector({
                 filter,
                 time: 60000
             });
-            let button_collector = interaction.channel.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 70000 });
+            let button_collector = await interaction.channel.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 70000 });
 
             //Get collector for the buttons
             button_collector.on('collect', async i => {
@@ -67,7 +67,7 @@ module.exports = {
 
                     i.deferUpdate();
 
-                    interaction.editReply({
+                    await interaction.editReply({
                         ephemeral: true,
                         content: replyMessage + await getMangaList(current_number, found_manga_list),
                         components: [previewBtn()]
@@ -79,7 +79,7 @@ module.exports = {
 
                     i.deferUpdate();
 
-                    interaction.editReply({
+                    await interaction.editReply({
                         ephemeral: true,
                         content: replyMessage + await getMangaList(current_number, found_manga_list),
                         components: [previewBtn()]
@@ -87,6 +87,7 @@ module.exports = {
                 }
                 //Check if cancelled
                 else if (i.customId === 'cancel') {
+                    button_collector.stop();
                     collector.stop();
                 }
                 //ignore other request
@@ -110,18 +111,23 @@ module.exports = {
 
                         if (typeof removed !== 'boolean') {
                             db_reply = removed;
+                            button_collector.stop();
                             collector.stop();
                         } else if (removed) {
                             gotResponse = true;
+                            button_collector.stop();
                             collector.stop();
                         } else {
+                            button_collector.stop();
                             collector.stop();
                         }
                     } else {
+                        button_collector.stop();
                         collector.stop();
                     }
                 }
                 else {
+                    button_collector.stop();
                     collector.stop();
                 }
             }
@@ -135,7 +141,6 @@ module.exports = {
                 Link: <${found_manga_list[selected_num].url}>`, components: []
                 });
             } else {
-                button_collector.stop();
                 await interaction.deleteReply();
 
                 //check if there was db reply
@@ -145,7 +150,6 @@ module.exports = {
                     await interaction.followUp({ ephemeral: true, content: db_reply });
                 }
             }
-            
         }
     }
 }
