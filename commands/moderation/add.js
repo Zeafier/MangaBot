@@ -20,7 +20,6 @@ module.exports = {
     ],
 
     callback: async (client, interaction) => {
-        await interaction.reply({ content: `Waiting`, ephemeral: true });
         let text = await interaction.options.get('manga-name').value;
 
         // Manganato request
@@ -40,17 +39,17 @@ module.exports = {
 
             //check if response was a boolean
             if (typeof db_response !== 'boolean') {
-                await interaction.editReply(response)
+                await interaction.reply(response)
                 //Check if response has been found
             } else if (db_response) {
                 let embed = await postingEmbed(manga_chapters.title.main, manga_chapters.chapters[0].name, manga_chapters.chapters[0].url, manga_chapters.coverImage);
-                await interaction.editReply({ embeds: [embed] });
+                await interaction.reply({ embeds: [embed] });
             } else {
-                await interaction.editReply({ content: 'There was a problem with your request. Please try again or contact admin', ephemeral: true });
+                await interaction.reply({ content: 'There was a problem with your request. Please try again or contact admin', ephemeral: true });
             }
             
         } else if (bool === 'undefined') {
-            await interaction.editReply(manga_info);
+            await interaction.reply(manga_info);
         } else {
             // number of manga in list to be displayed
             let current_number = 0;
@@ -60,7 +59,7 @@ module.exports = {
 
             let replyMessage = `Found ${manga_info.length} records. Please type number which manga you want to choose \n \n`
 
-            await interaction.editReply({
+            const message = await interaction.followUp({
                 ephemeral: true,
                 content: replyMessage + await getMangaList(current_number, manga_info),
                 components: [previewBtn()]
@@ -70,11 +69,12 @@ module.exports = {
             let filter = msg => msg.author.id === interaction.user.id;
             let button_filet = msg => msg.user.id === interaction.user.id;
 
-            let collector = await interaction.channel.createMessageCollector({
+            let collector = message.createMessageCollector({
                 filter,
                 time: 60000
             });
-            let button_collector = await interaction.channel.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 70000 });
+
+            let button_collector = message.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 70000 });
 
             //Get collector for the buttons
             button_collector.on('collect', async i => {
