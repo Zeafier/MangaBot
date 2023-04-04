@@ -1,7 +1,7 @@
 const { request } = require('../../api/manganato_requests');
 const { ApplicationCommandOptionType, ComponentType } = require('discord.js');
-const previewBtn = require('../../buttons/preview.Btn');
-const getMangaList = require('../../utils/getMangaList');
+const listEmbed = require('../../components/Embeds/listEmbed');
+const previewBtn = require('../../components/buttons/preview.Btn');
 
 module.exports = {
     name: 'searchmanga',
@@ -26,54 +26,45 @@ module.exports = {
         //Check if there are results
         if (type === "undefined") {
             await interaction.editReply({ content: manga_list, components: [] });
-        } else if (type === 'found') {
-            await interaction.editReply({ content: `One record has been found:
-                Name: ${manga_list.title}
-                Link: <${manga_list.url}>`, components: []});
         } else {
             let current_number = 0;
-            let max;
+            let max = current_number + 5 > manga_list.length ? manga_list.length : current_number + 5;
 
-            // set max number
-            if (current_number + 5 > res.length) {
-                max = res.length;
-            } else {
-                max = current_number + 5;
-            }
-
-            let replyMessage = `Found ${res.length} manga with this title. Page ${current_number + 1} - ${max} \n\n`
+            let replyMessage = `Found ${manga_list.length} manga with this title.`
 
             //await response
-            await interaction.editReply({
+            let message = await interaction.editReply({
                 ephemeral: true,
-                content: replyMessage + await getMangaList(current_number, manga_list),
+                embeds: [await listEmbed('Searching results:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, manga_list)],
                 components: [previewBtn()]
             });
 
             let button_filet = msg => msg.user.id === interaction.user.id;
-            let button_collector = await interaction.channel.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 60000 });
+            let button_collector = message.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 60000 });
 
             //Get collector for the buttons
             button_collector.on('collect', async i => {
                 // check if user want's next list
                 if (i.customId === 'next' && current_number + 5 < manga_list.length) {
                     current_number += 5;
+                    max = current_number + 5 > manga_list.length ? manga_list.length : current_number + 5;
 
                     i.deferUpdate();
 
                     await interaction.editReply({
-                        content: replyMessage + await getMangaList(current_number, manga_list),
+                        embeds: [await listEmbed('Searching results:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, manga_list)],
                         components: [previewBtn()]
                     });
                 }
                 // previous list
                 else if (i.customId === 'prev' && current_number - 5 >= 0) {
                     current_number -= 5;
+                    max = current_number + 5 > manga_list.length ? manga_list.length : current_number + 5;
 
                     i.deferUpdate();
 
                     await interaction.editReply({
-                        content: replyMessage + await getMangaList(current_number, manga_list),
+                        embeds: [await listEmbed('Searching results:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, manga_list)],
                         components: [previewBtn()]
                     });
                 }
@@ -89,11 +80,8 @@ module.exports = {
 
             //stop collector
             button_collector.on('end', async () => {
-                await interaction.editReply({
-                    content: replyMessage + await getMangaList(current_number, manga_list),
-                    components: []
-                });
-
+                await button_collector.stop();
+                await interaction.deleteReply();
                 await interaction.followUp('Request has been cancelled 🙂');
             })
         }

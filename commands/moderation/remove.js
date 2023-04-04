@@ -1,9 +1,10 @@
 const removeManga = require('../../database/callbacks/removeMangaFromList');
-const isNumber = require('../../utils/isNumber');
-const previewBtn = require('../../buttons/preview.Btn');
+const previewBtn = require('../../components/buttons/preview.Btn');
+const menuSelector = require('../../components/menu/mangaSelector');
+const listEmbed = require('../../components/Embeds/listEmbed');
 const getReadingLit = require('../../database/callbacks/getReadinList');
 const { ApplicationCommandOptionType, ComponentType, PermissionFlagsBits, ButtonStyle } = require('discord.js');
-const getMangaList = require('../../utils/getMangaList');
+const postingEmbed = require('../../components/Embeds/newMangaEmbed');
 
 module.exports = {
     name: 'removemanga',
@@ -38,118 +39,105 @@ module.exports = {
             // number of manga in list to be displayed
             let current_number = 0;
             let selected_num;
+            let max = current_number + 5 > found_manga_list.length ? found_manga_list.length : current_number + 5;
             let gotResponse = false;
             let db_reply = '';
 
-            let replyMessage = `Please select number to confirm which manga you want to remove \n \n`
+            let replyMessage = `Please select from the list below.`
 
-            await interaction.editReply({
+            let message = await interaction.editReply({
                 ephemeral: true,
-                content: replyMessage + await getMangaList(current_number, found_manga_list),
-                components: [previewBtn()]
+                embeds: [await listEmbed('Select to remove:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, found_manga_list)],
+                components: [menuSelector(current_number, found_manga_list), previewBtn()]
             });
 
             //get user response
-            let filter = msg => msg.author.id === interaction.user.id;
             let button_filet = msg => msg.user.id === interaction.user.id;
 
-            let collector = await interaction.channel.createMessageCollector({
-                filter,
-                time: 60000
-            });
-            let button_collector = await interaction.channel.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 70000 });
+            let button_collector = message.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 60000 });
+            let collect_response  = message.createMessageComponentCollector({ button_filet, componentType: ComponentType.StringSelect, time: 70000 });
 
             //Get collector for the buttons
             button_collector.on('collect', async i => {
                 // check if user want's next list
                 if (i.customId === 'next' && current_number + 5 < found_manga_list.length) {
                     current_number += 5;
+                    max = current_number + 5 > found_manga_list.length ? found_manga_list.length : current_number + 5;
 
                     i.deferUpdate();
 
                     await interaction.editReply({
                         ephemeral: true,
-                        content: replyMessage + await getMangaList(current_number, found_manga_list),
-                        components: [previewBtn()]
+                        embeds: [await listEmbed('Select to remove:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, found_manga_list)],
+                        components: [menuSelector(current_number, found_manga_list), previewBtn()]
                     });
                 }
                 // previous list
                 else if (i.customId === 'prev' && current_number - 5 >= 0) {
                     current_number -= 5;
+                    max = current_number + 5 > found_manga_list.length ? found_manga_list.length : current_number + 5;
 
                     i.deferUpdate();
 
                     await interaction.editReply({
                         ephemeral: true,
-                        content: replyMessage + await getMangaList(current_number, found_manga_list),
-                        components: [previewBtn()]
+                        embeds: [await listEmbed('Select to remove:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, found_manga_list)],
+                        components: [menuSelector(current_number, found_manga_list), previewBtn()]
                     });
                 }
                 //Check if cancelled
                 else if (i.customId === 'cancel') {
                     button_collector.stop();
-                    collector.stop();
+                    collect_response.stop();
                 }
                 //ignore other request
                 else {
                     i.deferUpdate();
                 }
-            })
+            });
 
-            //check all of the messages in collector
-            for await (const msg of collector) {
-                let reply = msg[0].content.toLowerCase();
+            collect_response.on('collect', async collected => {
+                selected_num = parseInt(collected.values[0]);
+                //check if selected number is in array
+                if (selected_num >= 0 && selected_num < found_manga_list.length) {
+                    let removed = await removeManga(found_manga_list[selected_num]._id)
 
-                // check if reply is a number
-                if (!isNaN(reply) && isNumber(reply)) {
-                    //set selected number
-                    selected_num = parseInt(reply) - 1;
-
-                    //check if selected number is in array
-                    if (selected_num >= 0 && selected_num < found_manga_list.length) {
-                        let removed = await removeManga(found_manga_list[selected_num]._id)
-
-                        if (typeof removed !== 'boolean') {
-                            db_reply = removed;
-                            button_collector.stop();
-                            collector.stop();
-                        } else if (removed) {
-                            gotResponse = true;
-                            button_collector.stop();
-                            collector.stop();
-                        } else {
-                            button_collector.stop();
-                            collector.stop();
-                        }
+                    if (typeof removed !== 'boolean') {
+                        db_reply = removed;
+                        button_collector.stop();
+                        collect_response.stop();
+                    } else if (removed) {
+                        gotResponse = true;
+                        button_collector.stop();
+                        collect_response.stop();
                     } else {
                         button_collector.stop();
-                        collector.stop();
+                        collect_response.stop();
+                    }
+                } else {
+                    button_collector.stop();
+                    collect_response.stop();
+                }
+            });
+
+            //End collector
+            button_collector.on('end', async collections => {
+                button_collector.stop();
+                collect_response.stop();
+                await interaction.deleteReply();
+
+                //check if got response
+                if (gotResponse) {
+                    await interaction.followUp({ embeds: [await postingEmbed(found_manga_list[selected_num].title, found_manga_list[selected_num].chapter, found_manga_list[selected_num].url, 'https://cdn-icons-png.flaticon.com/512/3221/3221803.png', "has been removed from your list")] });
+                } else {
+                    //check if there was db reply
+                    if (db_reply === '') {
+                        await interaction.followUp({ ephemeral: true, content: 'Request has been cancelled 🙂' })
+                    } else {
+                        await interaction.followUp({ ephemeral: true, content: db_reply });
                     }
                 }
-                else {
-                    button_collector.stop();
-                    collector.stop();
-                }
-            }
-
-            //check if got response
-            if (gotResponse) {
-                await interaction.deleteReply();
-                await interaction.followUp({
-                    content: `The following has been removed from your list:
-                Name: ${found_manga_list[selected_num].title}
-                Link: <${found_manga_list[selected_num].url}>`, components: []
-                });
-            } else {
-                await interaction.deleteReply();
-
-                //check if there was db reply
-                if (db_reply === '') {
-                    await interaction.followUp({ephemeral: true, content: 'Request has been cancelled 🙂'})
-                } else {
-                    await interaction.followUp({ ephemeral: true, content: db_reply });
-                }
-            }
+            });
         }
     }
 }

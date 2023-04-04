@@ -9,15 +9,9 @@ let request = async (manga) => {
     if(mangas.length < 1) {
         return ['undefined', 'No manga with this title has been found']
     }
-
-    if(mangas.length > 1) {
-        let manga_info = ['several', mangas];
-        return manga_info;
-
-    } else {
-        manga_info = ['found', mangas[0]];
-        return manga_info;
-    }
+    
+    let manga_info = ['several', mangas];
+    return manga_info;
 }
 
 // get manga information about selected

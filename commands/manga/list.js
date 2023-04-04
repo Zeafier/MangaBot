@@ -1,8 +1,8 @@
 
 const { ComponentType } = require('discord.js');
-const getMangaList = require('../../utils/getMangaList');
+const listEmbed = require('../../components/Embeds/listEmbed');
 const getReadingList = require('../../database/callbacks/getReadinList');
-const previewBtn = require('../../buttons/preview.Btn');
+const previewBtn = require('../../components/buttons/preview.Btn');
 
 //will be used for reading list
 module.exports = {
@@ -19,22 +19,18 @@ module.exports = {
         // Manganato request
         let res = await getReadingList(server_id);
 
-        if (current_number + 5 > res.length) {
-            max = res.length;
-        } else {
-            max = current_number + 5;
-        }
+        max = current_number + 5 > res.length ? res.length : current_number + 5;
 
-        let replyMessage = `There are currently ${res.length} on your reading list. Page ${current_number + 1} - ${max} \n\n`
+        let replyMessage = `There are currently ${res.length} on your reading list.`
 
-        await interaction.editReply({
+        let message = await interaction.editReply({
             ephemeral: true,
-            content: replyMessage + await getMangaList(current_number, res),
+            embeds: [await listEmbed('Your reading list:', `${replyMessage} Pages: ${current_number + 1} - ${max}`, current_number, max, res)],
             components: [previewBtn()]
         });
 
         let button_filet = msg => msg.user.id === interaction.user.id;
-        let button_collector = await interaction.channel.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 60000 });
+        let button_collector = message.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 60000 });
 
         if (res === 'NaN') {
             await interaction.editReply({ content: 'There is no manga on your reading list', components: [] });
@@ -44,22 +40,24 @@ module.exports = {
                 // check if user want's next list
                 if (i.customId === 'next' && current_number + 5 < res.length) {
                     current_number += 5;
+                    max = current_number + 5 > res.length ? res.length : current_number + 5;
 
                     i.deferUpdate();
 
                     await interaction.editReply({
-                        content: replyMessage + await getMangaList(current_number, res),
+                        embeds: [await listEmbed('Your reading list:', replyMessage + `Page ${current_number + 1} - ${max} \n\n`, current_number, max, res)],
                         components: [previewBtn()]
                     });
                 }
                 // previous list
                 else if (i.customId === 'prev' && current_number - 5 >= 0) {
                     current_number -= 5;
+                    max = current_number + 5 > res.length ? res.length : current_number + 5;
 
                     i.deferUpdate();
 
                     await interaction.editReply({
-                        content: replyMessage + await getMangaList(current_number, res),
+                        embeds: [await listEmbed('Your reading list:', replyMessage + `Page ${current_number + 1} - ${max} \n\n`, current_number, max, res)],
                         components: [previewBtn()]
                     });
                 }
@@ -77,12 +75,7 @@ module.exports = {
             button_collector.on('end', async () => {
                 
                 button_collector.stop();
-
-                await interaction.editReply({
-                    content: replyMessage + await getMangaList(current_number, res),
-                    components: []
-                });
-
+                await interaction.deleteReply();
                 await interaction.followUp('Viewing request has been cancelled 🙂');
             })
         }

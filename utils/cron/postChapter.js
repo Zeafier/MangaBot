@@ -1,4 +1,4 @@
-const postingEmbed = require("../Embeds/postingEmbed");
+const postingEmbed = require("../../components/Embeds/postingEmbed");
 
 
 module.exports = async (client, title, chapterName, url, server_id, channel_id, cover) => {

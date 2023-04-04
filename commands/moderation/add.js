@@ -1,10 +1,10 @@
 const { request, selected } = require('../../api/manganato_requests');
 const { ApplicationCommandOptionType, ComponentType, PermissionFlagsBits } = require('discord.js');
 const addMangaToDb = require('../../database/callbacks/addNewManga');
-const getMangaList = require('../../utils/getMangaList');
-const isNumber = require('../../utils/isNumber');
-const previewBtn = require('../../buttons/preview.Btn');
-const postingEmbed = require('../../utils/Embeds/newMangaEmbed');
+const previewBtn = require('../../components/buttons/preview.Btn');
+const menuSelector = require('../../components/menu/mangaSelector');
+const listEmbed = require('../../components/Embeds/listEmbed');
+const postingEmbed = require('../../components/Embeds/newMangaEmbed');
 
 module.exports = {
     name: 'addmanga',
@@ -28,18 +28,18 @@ module.exports = {
         let current_server = await interaction.guild.id;
 
         //get boolean value
-        let bool = response[0];
-        //get array value
-        let manga_info = response[1];
+        let bool = response[0], manga_info = response[1];
 
-        if (bool === 'found') {
-            manga_chapters = await selected(manga_info.url);
+        if (bool === 'undefined') {
+            await interaction.reply(manga_info);
+        } else if (manga_info.length === 1) {
+            manga_chapters = await selected(manga_info[0].url);
 
-            let db_response = await addMangaToDb(manga_chapters.title.main, manga_info.url, manga_chapters, current_server);
+            let db_response = await addMangaToDb(manga_chapters.title.main, manga_info[0].url, manga_chapters, current_server);
 
             //check if response was a boolean
             if (typeof db_response !== 'boolean') {
-                await interaction.reply(response)
+                await interaction.reply(db_response)
                 //Check if response has been found
             } else if (db_response) {
                 let embed = await postingEmbed(manga_chapters.title.main, manga_chapters.chapters[0].name, manga_chapters.chapters[0].url, manga_chapters.coverImage);
@@ -48,125 +48,113 @@ module.exports = {
                 await interaction.reply({ content: 'There was a problem with your request. Please try again or contact admin', ephemeral: true });
             }
             
-        } else if (bool === 'undefined') {
-            await interaction.reply(manga_info);
         } else {
             // number of manga in list to be displayed
             let current_number = 0;
             let selected_num;
+            let max = current_number + 5 > manga_info.length ? manga_info.length : current_number + 5;
             let gotResponse = false;
             let db_reply = '';
 
-            let replyMessage = `Found ${manga_info.length} records. Please type number which manga you want to choose \n \n`
+            let replyMessage = `Found ${manga_info.length} records. Please select from the list below.`
 
-            const message = await interaction.followUp({
+            const message = await interaction.reply({
                 ephemeral: true,
-                content: replyMessage + await getMangaList(current_number, manga_info),
-                components: [previewBtn()]
+                embeds: [await listEmbed('Searching results:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, manga_info)],
+                components: [menuSelector(current_number, manga_info), previewBtn()]
             });
 
             //get user response
-            let filter = msg => msg.author.id === interaction.user.id;
             let button_filet = msg => msg.user.id === interaction.user.id;
 
-            let collector = message.createMessageCollector({
-                filter,
-                time: 60000
-            });
-
-            let button_collector = message.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 70000 });
+            let button_collector = message.createMessageComponentCollector({ button_filet, componentType: ComponentType.Button, time: 60000 });
+            let collect_response  = message.createMessageComponentCollector({ button_filet, componentType: ComponentType.StringSelect, time: 70000 });
 
             //Get collector for the buttons
             button_collector.on('collect', async i => {
                 // check if user want's next list
                 if (i.customId === 'next' && current_number + 5 < manga_info.length) {
                     current_number += 5;
+                    max = current_number + 5 > manga_info.length ? manga_info.length : current_number + 5;
 
                     i.deferUpdate();
 
                     await interaction.editReply({
                         ephemeral: true,
-                        content: replyMessage + await getMangaList(current_number, manga_info),
-                        components: [previewBtn()]
+                        embeds: [await listEmbed('Searching results:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, manga_info)],
+                        components: [menuSelector(current_number, manga_info), previewBtn()]
                     });
                 }
                 // previous list
                 else if (i.customId === 'prev' && current_number - 5 >= 0) {
                     current_number -= 5;
+                    max = current_number + 5 > manga_info.length ? manga_info.length : current_number + 5;
 
                     i.deferUpdate();
 
                     await interaction.editReply({
                         ephemeral: true,
-                        content: replyMessage + await getMangaList(current_number, manga_info),
-                        components: [previewBtn()]
+                        embeds: [await listEmbed('Searching results:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, manga_info)],
+                        components: [menuSelector(current_number, manga_info), previewBtn()]
                     });
                 }
                 //Check if cancelled
                 else if (i.customId === 'cancel') {
                     button_collector.stop();
-                    collector.stop();
+                    collect_response.stop();
                 }
                 //ignore other request
                 else {
                     i.deferUpdate();
                 }
-            })
+            });
 
-            //check all of the messages in collector
-            for await (const msg of collector) {
-                let reply = msg[0].content.toLowerCase();
+            //Select menu collector interaction
+            collect_response.on('collect', async collected => {
+                selected_num = parseInt(collected.values[0]);
 
-                // check if reply is a number
-                if (!isNaN(reply) && isNumber(reply)) {
-                    //set selected number
-                    selected_num = parseInt(reply) - 1;
+                //Check if selected number is in manga
+                if (selected_num >= 0 && selected_num < manga_info.length) {
+                    manga_chapters = await selected(manga_info[selected_num].url);
 
-                    //check if selected number is in array
-                    if (selected_num >= 0 && selected_num < manga_info.length) {
-                        manga_chapters = await selected(manga_info[selected_num].url);
+                    let db_response = await addMangaToDb(manga_chapters.title.main, manga_info[selected_num].url, manga_chapters, current_server);
 
-                        let db_response = await addMangaToDb(manga_chapters.title.main, manga_info[selected_num].url, manga_chapters, current_server);
-
-                        if (typeof db_response !== 'boolean') {
-                            db_reply = db_response;
-                            button_collector.stop();
-                            collector.stop();
-                        } else if (db_response) {
-                            gotResponse = true;
-                            button_collector.stop();
-                            collector.stop();
-                        } else {
-                            button_collector.stop();
-                            collector.stop();
-                        }
+                    if (typeof db_response !== 'boolean') {
+                        db_reply = db_response;
+                        button_collector.stop();
+                    collect_response.stop();
+                    } else if (db_response) {
+                        gotResponse = true;
+                        button_collector.stop();
+                    collect_response.stop();
                     } else {
                         button_collector.stop();
-                        collector.stop();
+                    collect_response.stop();
+                    }
+                } else {
+                    button_collector.stop();
+                    collect_response.stop();
+                }
+            });
+
+            // stop collectors
+            button_collector.on('end', async collection => {
+                button_collector.stop();
+                collect_response.stop();
+                await interaction.deleteReply();
+
+                //check if got response
+                if (gotResponse) {
+                    await interaction.followUp({ embeds: [await postingEmbed(manga_chapters.title.main, manga_chapters.chapters[0].name, manga_chapters.chapters[0].url, manga_chapters.coverImage, "has been added to your list!") ]});
+                } else {
+                    //check if there was db reply
+                    if (db_reply === '') {
+                        await interaction.followUp({ephemeral: true, content: 'Request has been cancelled 🙂'})
+                    } else {
+                        await interaction.followUp({ ephemeral: true, content: db_reply });
                     }
                 }
-                else {
-                    button_collector.stop();
-                    collector.stop();
-                }
-            }
-
-            //check if got response
-            if (gotResponse) {
-                await interaction.deleteReply();
-
-                let embed = await postingEmbed(manga_chapters.title.main, manga_chapters.chapters[0].name, manga_chapters.chapters[0].url, manga_chapters.coverImage);
-                await interaction.followUp({ embeds: [embed] });
-            } else {
-                await interaction.deleteReply();
-
-                //check if there was db reply
-                if (db_reply === '') {
-                    await interaction.followUp({ephemeral: true, content: 'Request has been cancelled 🙂'})
-                } else {
-                    await interaction.followUp({ ephemeral: true, content: db_reply });
-                }
-            }
+            })
         }
     }
 }

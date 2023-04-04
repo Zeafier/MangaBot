@@ -1,6 +1,6 @@
 {
   "name": "mangabot",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Manga update bot is allowing any user to add/remove or view any manga from website",
   "main": "src/index.js",
   "scripts": {
