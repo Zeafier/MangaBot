@@ -2,6 +2,7 @@ const checkServer = require('./checkServers');
 const process_update = require ('./processUpdate');
 let { selected } = require('../../api/manganato_requests');
 let Manga = require('../../database/model/add-manga');
+let MangaExists = require('./checkIfMangaExists');
 const year_to_mill = 1000*60*60*24*365;
 
 module.exports = async (client) => {
@@ -12,7 +13,10 @@ module.exports = async (client) => {
         const today = new Date();
         const today_to_mill = today.getTime();
 
-        let server_lists = await Manga.find();
+        // let server_lists = await Manga.find();
+
+        let server_lists = await MangaExists();
+
         let chapter_info = [];
 
         //get posts for each manga
@@ -36,6 +40,7 @@ module.exports = async (client) => {
 
             if(chapter_info.length <= 0){
                 let manga_info = await selected(server_list.url);
+                
                 //fix that part
                 let chapter = manga_info.chapters[0];
 
