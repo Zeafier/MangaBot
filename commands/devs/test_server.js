@@ -4,10 +4,11 @@ const settings = require('../../utils/cron/settings');
 
 module.exports = {
     name: 'test-server',
-    description: 'Check if bot can post on server',
+    description: 'Bot checker test',
     permissions: PermissionFlagsBits.ManageGuild,
     devOnly: true,
     testOnly: false,
+    deleted: false,
     // options: [
     //     {
     //         name: 'server-id',
@@ -16,7 +17,6 @@ module.exports = {
     //         type: ApplicationCommandOptionType.String
     //     }
     // ],
-    deleted: true,
 
     callback: async (client, interaction) => {
         // const serv = interaction.options.get('server-id').value;
