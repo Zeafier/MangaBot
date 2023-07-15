@@ -1,13 +1,26 @@
+const listEmbed = require('../../components/Embeds/generalListEmbed');
+
 module.exports = {
     name: 'help',
-    description: 'Display all of the bots commands',
+    description: 'Display available commands',
 
     callback: async (client, interaction) => {
-        await interaction.reply(`Please find below valid bot commands. Please note that there is timer of 60s for each of them:
-        1. /addmanga <manga name> - add manga to your reading list (permission required)
-        2. /searchmanga <manga name> - search for manga
-        3. /showmangalist - get server's current reading list
-        4. /removemanga <manga name> - remove manga from server's reading list (permissions required)
-        5. /channel <select> - select where bot should post chapters (permissions required)`)
+
+        const title = "List of commands";
+        const replyMessage = "Please see below valid bot commands";
+
+        //List of commands:
+        const commands = [
+            {name: '1. /addmanga <manga name>', value: 'Add manga to your reading list (permission required)'},
+            {name: '2. /searchmanga <manga name>', value: 'Search for manga'},
+            {name: '3. /showmangalist', value: 'Get server\'s current reading list'},
+            {name: '4. /removemanga <manga name>', value: 'Remove manga from server\'s reading list (permissions required)'},
+            {name: '5. /channel <channel name>', value: 'Select where bot should post chapters (permissions required)`'}
+        ];
+
+        await interaction.reply({
+            ephemeral: true,
+            embeds: [await listEmbed(title, replyMessage, commands)]
+        })
     }
 }

@@ -1,16 +1,16 @@
 
 const { ComponentType } = require('discord.js');
-const listEmbed = require('../../components/Embeds/listEmbed');
+const listEmbed = require('../../components/Embeds/mangaListEmbed');
 const getReadingList = require('../../database/callbacks/getReadinList');
 const previewBtn = require('../../components/buttons/preview.Btn');
 
 //will be used for reading list
 module.exports = {
     name: 'showmangalist',
-    description: 'Display your current manga reading list',
+    description: 'Display servers manga list',
 
     callback: async (client, interaction) => {
-        await interaction.reply('Waiting...');
+        await interaction.reply({content: 'Waiting...', ephemeral: true});
 
         let current_number = 0;
         let max;
@@ -45,6 +45,7 @@ module.exports = {
                     i.deferUpdate();
 
                     await interaction.editReply({
+                        ephemeral: true,
                         embeds: [await listEmbed('Your reading list:', replyMessage + `Page ${current_number + 1} - ${max} \n\n`, current_number, max, res)],
                         components: [previewBtn()]
                     });
@@ -57,6 +58,7 @@ module.exports = {
                     i.deferUpdate();
 
                     await interaction.editReply({
+                        ephemeral: true,
                         embeds: [await listEmbed('Your reading list:', replyMessage + `Page ${current_number + 1} - ${max} \n\n`, current_number, max, res)],
                         components: [previewBtn()]
                     });
@@ -76,7 +78,7 @@ module.exports = {
                 
                 button_collector.stop();
                 await interaction.deleteReply();
-                await interaction.followUp('Viewing request has been cancelled 🙂');
+                await interaction.followUp({ephemeral: true, content: 'Viewing request has been cancelled 🙂'});
             })
         }
     }

@@ -1,14 +1,14 @@
 const { request, selected } = require('../../api/manganato_requests');
-const { ApplicationCommandOptionType, ComponentType, PermissionFlagsBits } = require('discord.js');
+const { ApplicationCommandOptionType, ComponentType, PermissionFlagsBits, PermissionsBitField } = require('discord.js');
 const addMangaToDb = require('../../database/callbacks/addNewManga');
 const previewBtn = require('../../components/buttons/preview.Btn');
 const menuSelector = require('../../components/menu/mangaSelector');
-const listEmbed = require('../../components/Embeds/listEmbed');
-const postingEmbed = require('../../components/Embeds/newMangaEmbed');
+const listEmbed = require('../../components/Embeds/mangaListEmbed');
+const postingEmbed = require('../../components/Embeds/postEmbed');
 
 module.exports = {
     name: 'addmanga',
-    description: 'Add which manga you want to get posts on',
+    description: 'Add which manga to server\'s reading list',
     permissions: PermissionFlagsBits.ManageGuild,
     options: [
         {
@@ -21,6 +21,12 @@ module.exports = {
 
     callback: async (client, interaction) => {
         let text = await interaction.options.get('manga-name').value;
+        const member = interaction.member;
+
+        // Limit who can use this command - Manage guild permission requires 
+        if(!member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
+            return interaction.reply({ephemeral: true, content: "You are not allowed to use this command. Please talk with moderator"});
+        }
 
         // Manganato request
         let response = await request(text);
@@ -31,7 +37,7 @@ module.exports = {
         let bool = response[0], manga_info = response[1];
 
         if (bool === 'undefined') {
-            await interaction.reply(manga_info);
+            await interaction.reply({ephemeral: true, content: manga_info});
         } else if (manga_info.length === 1) {
             manga_chapters = await selected(manga_info[0].url);
 
@@ -43,9 +49,9 @@ module.exports = {
                 //Check if response has been found
             } else if (db_response) {
                 let embed = await postingEmbed(manga_chapters.title.main, manga_chapters.chapters[0].name, manga_chapters.chapters[0].url, manga_chapters.coverImage);
-                await interaction.reply({ embeds: [embed] });
+                await interaction.reply({embeds: [embed] });
             } else {
-                await interaction.reply({ content: 'There was a problem with your request. Please try again or contact admin', ephemeral: true });
+                await interaction.reply({ephemeral: true, content: 'There was a problem with your request. Please try again or contact admin'});
             }
             
         } else {

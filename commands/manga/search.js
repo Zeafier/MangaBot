@@ -1,6 +1,6 @@
 const { request } = require('../../api/manganato_requests');
 const { ApplicationCommandOptionType, ComponentType } = require('discord.js');
-const listEmbed = require('../../components/Embeds/listEmbed');
+const listEmbed = require('../../components/Embeds/mangaListEmbed');
 const previewBtn = require('../../components/buttons/preview.Btn');
 
 module.exports = {
@@ -9,14 +9,14 @@ module.exports = {
     options: [
         {
             name: 'manga-name',
-            description: 'Please provide manga name',
+            description: 'Search for manga',
             type: ApplicationCommandOptionType.String,
             required: true
         }
     ],
 
     callback: async (client, interaction) => {
-        await interaction.reply('Please wait...');
+        await interaction.reply({ephemeral: true, content: 'Please wait...'});
         let text = await interaction.options.get('manga-name').value;
 
         // Manganato request
@@ -25,7 +25,7 @@ module.exports = {
 
         //Check if there are results
         if (type === "undefined") {
-            await interaction.editReply({ content: manga_list, components: [] });
+            await interaction.editReply({ ephemeral: true, content: manga_list, components: [] });
         } else {
             let current_number = 0;
             let max = current_number + 5 > manga_list.length ? manga_list.length : current_number + 5;
@@ -52,6 +52,7 @@ module.exports = {
                     i.deferUpdate();
 
                     await interaction.editReply({
+                        ephemeral: true,
                         embeds: [await listEmbed('Searching results:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, manga_list)],
                         components: [previewBtn()]
                     });
@@ -64,6 +65,7 @@ module.exports = {
                     i.deferUpdate();
 
                     await interaction.editReply({
+                        ephemeral: true,
                         embeds: [await listEmbed('Searching results:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, manga_list)],
                         components: [previewBtn()]
                     });
@@ -82,7 +84,7 @@ module.exports = {
             button_collector.on('end', async () => {
                 await button_collector.stop();
                 await interaction.deleteReply();
-                await interaction.followUp('Request has been cancelled 🙂');
+                await interaction.followUp({ephemeral: true, content: 'Request has been cancelled 🙂'});
             })
         }
     }

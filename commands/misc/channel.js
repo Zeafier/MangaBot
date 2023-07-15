@@ -1,16 +1,14 @@
-const { PermissionFlagsBits, ApplicationCommandOptionType } = require('discord.js');
+const { PermissionFlagsBits, ApplicationCommandOptionType, PermissionsBitField } = require('discord.js');
 const dbServerSettings = require('../../database/server/serverPostingSettings');
 
 module.exports = {
     name: 'channel',
-    description: 'Set where bot can post messages',
+    description: 'Set channel for manga posting - required permission',
     permissions: PermissionFlagsBits.ManageGuild,
-    // devOnly: true,
-    // testOnly: true,
     options: [
         {
             name: 'channel-name',
-            description: 'Select channel',
+            description: 'Select channel for posting',
             required: true,
             type: ApplicationCommandOptionType.Channel
         }
@@ -20,16 +18,22 @@ module.exports = {
     callback: async (client, interaction) => {
         const channel = interaction.options.get('channel-name').value;
         const current_server = interaction.guild.id;
+        const member = interaction.member;
+
+        // Limit who can use this command - Manage channels permission requires 
+        if(!member.permissions.has(PermissionsBitField.Flags.ManageChannels)) {
+            return interaction.reply({ephemeral: true, content: "You are not allowed to use this command. Please talk with channel moderator"});
+        }
         
         const response = await dbServerSettings(current_server, channel);
 
         if (response) {
-            await client.channels.cache.get(channel).send('This channel will be used for posting manga updates');
+            await client.channels.cache.get(channel).send({ephemeral: true, content: 'This channel will be used for posting manga updates'});
             //set in mongodb to set main channel
 
-            await interaction.reply('Selected channel has been set as main posting channel');
+            await interaction.reply({ephemeral: true, content: 'Selected channel has been set as main posting channel'});
         }else{
-            await interaction.reply('Something went wrong');
+            await interaction.reply({ephemeral: true, content: 'Something went wrong'});
         }
     }
 }

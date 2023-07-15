@@ -1,14 +1,14 @@
 const removeManga = require('../../database/callbacks/removeMangaFromList');
 const previewBtn = require('../../components/buttons/preview.Btn');
 const menuSelector = require('../../components/menu/mangaSelector');
-const listEmbed = require('../../components/Embeds/listEmbed');
+const listEmbed = require('../../components/Embeds/mangaListEmbed');
 const getReadingLit = require('../../database/callbacks/getReadinList');
-const { ApplicationCommandOptionType, ComponentType, PermissionFlagsBits, ButtonStyle } = require('discord.js');
-const postingEmbed = require('../../components/Embeds/newMangaEmbed');
+const { ApplicationCommandOptionType, ComponentType, PermissionFlagsBits, PermissionsBitField } = require('discord.js');
+const postingEmbed = require('../../components/Embeds/postEmbed');
 
 module.exports = {
     name: 'removemanga',
-    description: 'Remove manga from your reading list',
+    description: 'Remove manga from the server list',
     permissions: PermissionFlagsBits.ManageGuild,
     options: [
         {
@@ -20,10 +20,16 @@ module.exports = {
     ],
 
     callback: async (client, interaction) => {
-        await interaction.reply({ content: `Searching...`, ephemeral: true });
-
         let text = await interaction.options.get('manga-name').value;
         let current_server = interaction.guild.id;
+        const member = interaction.member;
+
+        // Limit who can use this command - Manage guild permission requires 
+        if(!member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
+            return interaction.reply({ephemeral: true, content: "You are not allowed to use this command. Please talk with moderator"});
+        }
+
+        await interaction.reply({ ephemeral: true, content: `Searching...` });
 
         //request manga list from server
         let server_list = await getReadingLit(current_server);
@@ -31,10 +37,10 @@ module.exports = {
 
         if (found_manga_list.length <= 0) { 
             //return manga not found
-            await interaction.editReply({ content: `There is no manga with that title on your list. Please try to view your reading list using /list-manga`, ephemeral: true });
+            await interaction.editReply({ ephemeral: true, content: `There is no manga with that title on your list. Please check your reading list using /showmangalist` });
         } else if (found_manga_list === "NaN") { 
             // show error message
-            await interaction.editReply({ content: `There is currently no reading list for this server`, ephemeral: true });
+            await interaction.editReply({ ephemeral: true, content: `There is currently no reading list for this server` });
         } else if (found_manga_list.length >= 1) {
             // number of manga in list to be displayed
             let current_number = 0;
