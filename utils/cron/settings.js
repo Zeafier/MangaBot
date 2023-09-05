@@ -15,7 +15,7 @@ module.exports = async (client) => {
 
         // let server_lists = await Manga.find();
 
-        let server_lists = await MangaExists();
+        let server_lists = await MangaExists(client, servers);
 
         let chapter_info = [];
 
@@ -38,6 +38,7 @@ module.exports = async (client) => {
                 continue;
             }
 
+            // check if chapted info is less than 0
             if(chapter_info.length <= 0){
                 let manga_info = await selected(server_list.url);
                 
