@@ -21,7 +21,9 @@ module.exports = async (client, servers) => {
         } catch (error) {
             //remove manga from list if it does not exists
             await Manga.findByIdAndRemove(manga._id);
-            console.log(`Manga "${manga.title}" has been removed. Please check URL.`);
+            let currentdate = new Date();
+            let datetime = `${currentdate.getDate()}/${(currentdate.getMonth()+1)}/${currentdate.getFullYear()} ${currentdate.getHours()}:${currentdate.getMinutes()}:${currentdate.getSeconds()}`;
+            console.log(`${datetime} Manga "${manga.title}" has been removed. Please check URL.`);
             
             await postRemoval(client, servers, manga.server, manga.title, manga.url);
 
