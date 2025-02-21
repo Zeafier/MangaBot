@@ -1,4 +1,5 @@
 const listEmbed = require('../../components/Embeds/generalListEmbed');
+const { MessageFlags } = require('discord.js');
 
 module.exports = {
     name: 'help',
@@ -19,7 +20,7 @@ module.exports = {
         ];
 
         await interaction.reply({
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
             embeds: [await listEmbed(title, replyMessage, commands)]
         })
     }

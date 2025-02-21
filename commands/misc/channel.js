@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, ApplicationCommandOptionType, PermissionsBitField } = require('discord.js');
+const { PermissionFlagsBits, ApplicationCommandOptionType, PermissionsBitField, MessageFlags } = require('discord.js');
 const dbServerSettings = require('../../database/server/serverPostingSettings');
 
 module.exports = {
@@ -22,18 +22,18 @@ module.exports = {
 
         // Limit who can use this command - Manage channels permission requires 
         if(!member.permissions.has(PermissionsBitField.Flags.ManageChannels)) {
-            return interaction.reply({ephemeral: true, content: "You are not allowed to use this command. Please talk with channel moderator"});
+            return interaction.reply({flags: MessageFlags.Ephemeral, content: "You are not allowed to use this command. Please talk with channel moderator"});
         }
         
         const response = await dbServerSettings(current_server, channel);
 
         if (response) {
-            await client.channels.cache.get(channel).send({ephemeral: true, content: 'This channel will be used for posting manga updates'});
+            await client.channels.cache.get(channel).send({flags: MessageFlags.Ephemeral, content: 'This channel will be used for posting manga updates'});
             //set in mongodb to set main channel
 
-            await interaction.reply({ephemeral: true, content: 'Selected channel has been set as main posting channel'});
+            await interaction.reply({flags: MessageFlags.Ephemeral, content: 'Selected channel has been set as main posting channel'});
         }else{
-            await interaction.reply({ephemeral: true, content: 'Something went wrong'});
+            await interaction.reply({flags: MessageFlags.Ephemeral, content: 'Something went wrong'});
         }
     }
 }

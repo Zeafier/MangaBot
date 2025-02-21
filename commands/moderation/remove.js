@@ -3,7 +3,7 @@ const previewBtn = require('../../components/buttons/preview.Btn');
 const menuSelector = require('../../components/menu/mangaSelector');
 const listEmbed = require('../../components/Embeds/mangaListEmbed');
 const getReadingLit = require('../../database/callbacks/getReadinList');
-const { ApplicationCommandOptionType, ComponentType, PermissionFlagsBits, PermissionsBitField } = require('discord.js');
+const { ApplicationCommandOptionType, ComponentType, PermissionFlagsBits, PermissionsBitField, MessageFlags } = require('discord.js');
 const postingEmbed = require('../../components/Embeds/postEmbed');
 
 module.exports = {
@@ -26,10 +26,10 @@ module.exports = {
 
         // Limit who can use this command - Manage guild permission requires 
         if(!member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-            return interaction.reply({ephemeral: true, content: "You are not allowed to use this command. Please talk with moderator"});
+            return interaction.reply({flags: MessageFlags.Ephemeral, content: "You are not allowed to use this command. Please talk with moderator"});
         }
 
-        await interaction.reply({ ephemeral: true, content: `Searching...` });
+        await interaction.reply({ flags: MessageFlags.Ephemeral, content: `Searching...` });
 
         //request manga list from server
         let server_list = await getReadingLit(current_server);
@@ -37,10 +37,10 @@ module.exports = {
 
         if (found_manga_list.length <= 0) { 
             //return manga not found
-            await interaction.editReply({ ephemeral: true, content: `There is no manga with that title on your list. Please check your reading list using /showmangalist` });
+            await interaction.editReply({ flags: MessageFlags.Ephemeral, content: `There is no manga with that title on your list. Please check your reading list using /showmangalist` });
         } else if (found_manga_list === "NaN") { 
             // show error message
-            await interaction.editReply({ ephemeral: true, content: `There is currently no reading list for this server` });
+            await interaction.editReply({ flags: MessageFlags.Ephemeral, content: `There is currently no reading list for this server` });
         } else if (found_manga_list.length >= 1) {
             // number of manga in list to be displayed
             let current_number = 0;
@@ -52,7 +52,7 @@ module.exports = {
             let replyMessage = `Please select from the list below.`
 
             let message = await interaction.editReply({
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
                 embeds: [await listEmbed('Select to remove:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, found_manga_list)],
                 components: [menuSelector(current_number, found_manga_list), previewBtn()]
             });
@@ -73,7 +73,7 @@ module.exports = {
                     i.deferUpdate();
 
                     await interaction.editReply({
-                        ephemeral: true,
+                        flags: MessageFlags.Ephemeral,
                         embeds: [await listEmbed('Select to remove:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, found_manga_list)],
                         components: [menuSelector(current_number, found_manga_list), previewBtn()]
                     });
@@ -86,7 +86,7 @@ module.exports = {
                     i.deferUpdate();
 
                     await interaction.editReply({
-                        ephemeral: true,
+                        flags: MessageFlags.Ephemeral,
                         embeds: [await listEmbed('Select to remove:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, found_manga_list)],
                         components: [menuSelector(current_number, found_manga_list), previewBtn()]
                     });
@@ -138,9 +138,9 @@ module.exports = {
                 } else {
                     //check if there was db reply
                     if (db_reply === '') {
-                        await interaction.followUp({ ephemeral: true, content: 'Request has been cancelled 🙂' })
+                        await interaction.followUp({ flags: MessageFlags.Ephemeral, content: 'Request has been cancelled 🙂' })
                     } else {
-                        await interaction.followUp({ ephemeral: true, content: db_reply });
+                        await interaction.followUp({ flags: MessageFlags.Ephemeral, content: db_reply });
                     }
                 }
             });

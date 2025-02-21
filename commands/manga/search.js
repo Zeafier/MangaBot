@@ -1,5 +1,5 @@
 const { request } = require('../../api/manganato_requests');
-const { ApplicationCommandOptionType, ComponentType } = require('discord.js');
+const { ApplicationCommandOptionType, ComponentType, MessageFlags } = require('discord.js');
 const listEmbed = require('../../components/Embeds/mangaListEmbed');
 const previewBtn = require('../../components/buttons/preview.Btn');
 
@@ -16,7 +16,7 @@ module.exports = {
     ],
 
     callback: async (client, interaction) => {
-        await interaction.reply({ephemeral: true, content: 'Please wait...'});
+        await interaction.reply({flags: MessageFlags.Ephemeral, content: 'Please wait...'});
         let text = await interaction.options.get('manga-name').value;
 
         // Manganato request
@@ -25,7 +25,7 @@ module.exports = {
 
         //Check if there are results
         if (type === "undefined") {
-            await interaction.editReply({ ephemeral: true, content: manga_list, components: [] });
+            await interaction.editReply({ flags: MessageFlags.Ephemeral, content: manga_list, components: [] });
         } else {
             let current_number = 0;
             let max = current_number + 5 > manga_list.length ? manga_list.length : current_number + 5;
@@ -34,7 +34,7 @@ module.exports = {
 
             //await response
             let message = await interaction.editReply({
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
                 embeds: [await listEmbed('Searching results:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, manga_list)],
                 components: [previewBtn()]
             });
@@ -52,7 +52,7 @@ module.exports = {
                     i.deferUpdate();
 
                     await interaction.editReply({
-                        ephemeral: true,
+                        flags: MessageFlags.Ephemeral,
                         embeds: [await listEmbed('Searching results:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, manga_list)],
                         components: [previewBtn()]
                     });
@@ -65,7 +65,7 @@ module.exports = {
                     i.deferUpdate();
 
                     await interaction.editReply({
-                        ephemeral: true,
+                        flags: MessageFlags.Ephemeral,
                         embeds: [await listEmbed('Searching results:', `${replyMessage}. Pages ${current_number + 1} - ${max} \n\n`, current_number, max, manga_list)],
                         components: [previewBtn()]
                     });
@@ -84,7 +84,7 @@ module.exports = {
             button_collector.on('end', async () => {
                 await button_collector.stop();
                 await interaction.deleteReply();
-                await interaction.followUp({ephemeral: true, content: 'Request has been cancelled 🙂'});
+                await interaction.followUp({flags: MessageFlags.Ephemeral, content: 'Request has been cancelled 🙂'});
             })
         }
     }

@@ -1,8 +1,9 @@
 
-const { ComponentType } = require('discord.js');
+const { ComponentType, MessageFlags } = require('discord.js');
 const listEmbed = require('../../components/Embeds/mangaListEmbed');
 const getReadingList = require('../../database/callbacks/getReadinList');
 const previewBtn = require('../../components/buttons/preview.Btn');
+
 
 //will be used for reading list
 module.exports = {
@@ -10,7 +11,7 @@ module.exports = {
     description: 'Display servers manga list',
 
     callback: async (client, interaction) => {
-        await interaction.reply({content: 'Waiting...', ephemeral: true});
+        await interaction.reply({content: 'Waiting...', flags: MessageFlags.Ephemeral});
 
         let current_number = 0;
         let max;
@@ -24,7 +25,7 @@ module.exports = {
         let replyMessage = `There are currently ${res.length} on your reading list.`
 
         let message = await interaction.editReply({
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
             embeds: [await listEmbed('Your reading list:', `${replyMessage} Pages: ${current_number + 1} - ${max}`, current_number, max, res)],
             components: [previewBtn()]
         });
@@ -45,7 +46,7 @@ module.exports = {
                     i.deferUpdate();
 
                     await interaction.editReply({
-                        ephemeral: true,
+                        flags: MessageFlags.Ephemeral,
                         embeds: [await listEmbed('Your reading list:', replyMessage + `Page ${current_number + 1} - ${max} \n\n`, current_number, max, res)],
                         components: [previewBtn()]
                     });
@@ -58,7 +59,7 @@ module.exports = {
                     i.deferUpdate();
 
                     await interaction.editReply({
-                        ephemeral: true,
+                        flags: MessageFlags.Ephemeral,
                         embeds: [await listEmbed('Your reading list:', replyMessage + `Page ${current_number + 1} - ${max} \n\n`, current_number, max, res)],
                         components: [previewBtn()]
                     });
@@ -78,7 +79,7 @@ module.exports = {
                 
                 button_collector.stop();
                 await interaction.deleteReply();
-                await interaction.followUp({ephemeral: true, content: 'Viewing request has been cancelled 🙂'});
+                await interaction.followUp({flags: MessageFlags.Ephemeral, content: 'Viewing request has been cancelled 🙂'});
             })
         }
     }
